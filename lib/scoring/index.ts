@@ -7,6 +7,7 @@ export {
 export type { OpportunityInput } from "./opportunity";
 export { effort, EFFORT_THRESHOLDS } from "./effort";
 export { scoreToPriority, PRIORITY_THRESHOLDS } from "./priority";
+export { sectorMatches } from "./sectors";
 export {
   matchProspectFromLead,
   propertyProfileFromBrief,

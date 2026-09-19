@@ -35,7 +35,7 @@ export class RuleBasedProvider implements AIProvider {
       case "Nuevo":
         return "Investigar y calificar antes de contactar";
       case "Investigado":
-        return "Mover a listo para contactar";
+        return "Hacer la llamada corta de validación antes de mover a Listo para contactar";
       case "Listo para contactar":
         return "Enviar primer mensaje por WhatsApp o LinkedIn";
       case "Contactado":

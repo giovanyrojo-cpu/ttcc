@@ -1,8 +1,29 @@
+import { companyKey } from "./employers";
 import type {
   ProspectSearchProvider,
   RawProspect,
   SearchRequest,
 } from "./types";
+
+function isEmpty(value: unknown) {
+  return value === undefined || value === null || value === "";
+}
+
+// Une dos registros de la misma empresa (p. ej. directorio + vacante).
+// Solo rellena huecos: un dato ya presente nunca se sobrescribe.
+function mergeProspects(base: RawProspect, extra: RawProspect): RawProspect {
+  const merged: RawProspect = { ...base };
+
+  for (const [field, value] of Object.entries(extra)) {
+    const key = field as keyof RawProspect;
+
+    if (isEmpty(merged[key]) && !isEmpty(value)) {
+      (merged as unknown as Record<string, unknown>)[key] = value;
+    }
+  }
+
+  return merged;
+}
 
 export async function searchProspects(
   request: SearchRequest,
@@ -16,33 +37,19 @@ export async function searchProspects(
     result.status === "fulfilled" ? result.value : []
   );
 
-  // Deduplicación básica por empresa + web/teléfono.
+  // La misma empresa se reconoce por su nombre sin sufijos legales ni
+  // geografía; los registros de distintas fuentes se combinan.
   const unique = new Map<string, RawProspect>();
 
   for (const prospect of all) {
-    const key = [
-      prospect.company_or_person?.toLowerCase().trim(),
-      prospect.website?.toLowerCase().trim() ?? "",
-      prospect.phone?.replace(/\D/g, "") ?? "",
-    ].join("|");
-
+    const key = companyKey(prospect.company_or_person);
     const previous = unique.get(key);
 
-    if (!previous) {
-      unique.set(key, prospect);
-      continue;
-    }
-
-    // Conservamos la versión que tenga más información.
-    const completeness = (p: RawProspect) =>
-      Object.values(p).filter(
-        (value) => value !== undefined && value !== null && value !== ""
-      ).length;
-
-    if (completeness(prospect) > completeness(previous)) {
-      unique.set(key, prospect);
-    }
+    unique.set(key, previous ? mergeProspects(previous, prospect) : prospect);
   }
 
+  // El límite se aplica a la lista ya unida. Para no descartar candidatos
+  // antes de puntuarlos, quien llama debe pasar un límite amplio y recortar
+  // después de calificar.
   return Array.from(unique.values()).slice(0, request.limit ?? 50);
 }

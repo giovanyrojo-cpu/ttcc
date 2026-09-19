@@ -37,6 +37,9 @@ export interface MatchProspect {
   role?: string;
 
   signal?: string;
+  // Señal canónica (p. ej. "Contratación"). Si viene, se compara esta contra
+  // las señales de la propiedad en vez del texto libre.
+  signal_kind?: string;
   signal_source?: string;
 
   // Necesidades verificadas del prospecto frente a la propiedad.

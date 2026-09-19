@@ -4,7 +4,8 @@ import { createHuntBrief } from "@/lib/agents/atenea";
 import { qualifyProspect } from "@/lib/agents/hercules";
 import { createHuntPreview } from "@/lib/hunts/preview";
 import { searchProspects } from "@/lib/search";
-import { firecrawlProspectProvider } from "@/lib/search/firecrawl";
+import { createDirectoryProvider } from "@/lib/search/directory";
+import { createVacancyProvider } from "@/lib/search/vacancies";
 import ExportExcelButton from "./ExportExcelButton";
 
 export default async function HerculesPage({
@@ -33,8 +34,9 @@ export default async function HerculesPage({
           target_sectors: huntBrief.hunt_order.target_sectors,
           target_roles: huntBrief.hunt_order.target_roles,
           buying_signals: huntBrief.hunt_order.buying_signals,
-          limit: 50,
-        }, [firecrawlProspectProvider])
+          // Límite amplio: se recorta DESPUÉS de calificar, no antes.
+          limit: 500,
+        }, [createDirectoryProvider(), createVacancyProvider()])
       : [];
 
   const huntResults =
@@ -42,6 +44,7 @@ export default async function HerculesPage({
       ? rawProspects
           .map((prospect) => qualifyProspect(prospect, huntBrief))
           .sort((a, b) => b.fit_score - a.fit_score)
+          .slice(0, 50)
       : [];
 
   const priorityA = leads.filter((lead) => lead.prioridad === "A");

@@ -1,4 +1,5 @@
 import { scoreToPriority } from "./priority";
+import { sectorMatches } from "./sectors";
 import type {
   CriterionResult,
   MatchProspect,
@@ -67,7 +68,7 @@ function scoreFit(
     checks.push({
       label: "Giro compatible con la propiedad",
       result: prospect.industry
-        ? textMatches(prospect.industry, property.target_sectors)
+        ? sectorMatches(prospect.industry, property.target_sectors)
         : null,
     });
   }
@@ -155,13 +156,15 @@ function scoreIntent(
   const notes: string[] = [];
   let points = 0;
 
-  if (!prospect.signal) {
+  const signal = prospect.signal_kind ?? prospect.signal;
+
+  if (!signal) {
     missing.push("Señal comercial");
 
     return criterion(0, max, ["Sin señal de intención."]);
   }
 
-  if (textMatches(prospect.signal, property.buying_signals)) {
+  if (textMatches(signal, property.buying_signals)) {
     points += 15;
     notes.push("Señal corresponde a las de la propiedad.");
 

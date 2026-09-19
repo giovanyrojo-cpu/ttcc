@@ -1,4 +1,5 @@
 import type { MatchBreakdown } from "@/lib/scoring";
+import type { PhoneStatus } from "@/lib/search/phone";
 
 export type AgentName =
   | "ATENEA"
@@ -79,6 +80,12 @@ export interface AteneaToHerculesBrief {
   };
 }
 
+// Constancia de que una persona hizo la llamada corta de validación.
+export interface HumanValidation {
+  validated_at: string;
+  validated_by?: string;
+}
+
 export interface HerculesProspect {
   id?: string;
 
@@ -92,7 +99,14 @@ export interface HerculesProspect {
 
   role?: string;
 
+  nationality?: string;
+
+  // Solo se llena cuando la fuente verifica la ubicación.
+  location_source?: "directory" | "vacancy";
+
   phone?: string;
+
+  phone_status?: PhoneStatus;
 
   whatsapp?: string;
 
@@ -104,11 +118,15 @@ export interface HerculesProspect {
 
   signal?: string;
 
+  signal_kind?: string;
+
   signal_source?: string;
 
   fit_score: number;
 
   match_breakdown?: MatchBreakdown;
+
+  human_validation?: HumanValidation;
 
   priority:
     | "A"
