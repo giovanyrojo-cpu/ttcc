@@ -8,6 +8,7 @@ export type { OpportunityInput } from "./opportunity";
 export { effort, EFFORT_THRESHOLDS } from "./effort";
 export { scoreToPriority, PRIORITY_THRESHOLDS } from "./priority";
 export { sectorMatches } from "./sectors";
+export { compareZones, resolveZones, ZONES } from "./zones";
 export {
   matchProspectFromLead,
   propertyProfileFromBrief,

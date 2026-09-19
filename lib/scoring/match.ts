@@ -1,5 +1,6 @@
 import { scoreToPriority } from "./priority";
 import { sectorMatches } from "./sectors";
+import { compareZones } from "./zones";
 import type {
   CriterionResult,
   MatchProspect,
@@ -217,6 +218,9 @@ function scoreCapacity(
 }
 
 // 4. UBICACIÓN — máximo 15
+// Se compara la ZONA (municipio, colonia, parque), no el texto: "Querétaro"
+// solo no distingue nada. Misma zona = completo; mismo municipio pero otra
+// zona = la mitad (PROVISIONAL); otra zona o zona sin verificar = 0.
 function scoreLocation(
   prospect: MatchProspect,
   property: PropertyProfile,
@@ -230,11 +234,33 @@ function scoreLocation(
     return criterion(0, max, ["Sin ubicación del prospecto."]);
   }
 
-  const zones = [property.location, ...property.geography];
+  const comparison = compareZones(property.location, prospect.location);
+  const where = comparison.prospect_zones.join(" / ");
 
-  return textMatches(prospect.location, zones)
-    ? criterion(max, max, ["Ubicación compatible con la propiedad."])
-    : criterion(0, max, ["Ubicación fuera de la zona de la propiedad."]);
+  switch (comparison.match) {
+    case "same_zone":
+      return criterion(max, max, [`Misma zona: ${comparison.shared}.`]);
+
+    case "same_municipality":
+      return criterion(max / 2, max, [
+        `Mismo municipio (${comparison.shared}), otra zona: ${where}.`,
+      ]);
+
+    case "different":
+      return criterion(0, max, [`Otra zona: ${where}.`]);
+
+    case "unknown_property":
+      missing.push("Zona de la propiedad no reconocida (agregar a zones.ts)");
+
+      return criterion(0, max, ["La zona de la propiedad no está en el catálogo."]);
+
+    default:
+      missing.push("Zona del prospecto sin verificar");
+
+      return criterion(0, max, [
+        "La ubicación no permite ubicar una zona concreta.",
+      ]);
+  }
 }
 
 // 5. ACCESO AL DECISOR — máximo 10

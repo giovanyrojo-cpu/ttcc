@@ -1,3 +1,4 @@
+import { resolveZones } from "@/lib/scoring/zones";
 import { checkPhoneFormat, isReliablePhone } from "./phone";
 import type { PageFetcher } from "./pages";
 import { scrapePage } from "./pages";
@@ -63,9 +64,14 @@ export function piqProspects(
       industry: entry.industry || undefined,
       nationality: entry.nationality || undefined,
 
-      // La dirección la publica el directorio del parque: ubicación verificada.
+      // La dirección la publica el directorio: ubicación verificada. Se agrega
+      // el parque solo si la dirección no nombra ya otra zona (hay empresas
+      // del directorio en Balvanera o Juriquilla) ni es una carretera con un
+      // kilómetro que no es el del parque: esas quedan como zona sin verificar.
       location: entry.address
-        ? `${entry.address}, Parque Industrial Querétaro`
+        ? resolveZones(entry.address).length > 0 || /\bkm\b/i.test(entry.address)
+          ? entry.address
+          : `${entry.address}, Parque Industrial Querétaro`
         : undefined,
       location_source: entry.address ? "directory" : undefined,
 
