@@ -1,3 +1,5 @@
+import type { MatchBreakdown } from "@/lib/scoring";
+
 export type AgentName =
   | "ATENEA"
   | "HERCULES"
@@ -105,6 +107,8 @@ export interface HerculesProspect {
   signal_source?: string;
 
   fit_score: number;
+
+  match_breakdown?: MatchBreakdown;
 
   priority:
     | "A"

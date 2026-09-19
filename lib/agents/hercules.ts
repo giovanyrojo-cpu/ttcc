@@ -2,176 +2,39 @@ import type {
   AteneaToHerculesBrief,
   HerculesProspect,
 } from "@/types/agents";
+import {
+  matchScore,
+  propertyProfileFromBrief,
+  type MatchProspect,
+} from "@/lib/scoring";
 
-export interface ProspectCandidate {
+// Los datos de contacto (tel\u00e9fono, correo, LinkedIn, web) son operativos:
+// se guardan y se reportan como faltantes, pero no suman al Match Score.
+export interface ProspectCandidate extends MatchProspect {
   company_or_person: string;
-
-  industry?: string;
-  location?: string;
-
-  decision_maker?: string;
-  role?: string;
 
   phone?: string;
   whatsapp?: string;
   email?: string;
   linkedin?: string;
   website?: string;
-
-  signal?: string;
-  signal_source?: string;
-}
-
-function normalize(value?: string) {
-  return (value || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-export function calculateFitScore(
-  candidate: ProspectCandidate,
-  brief: AteneaToHerculesBrief
-): number {
-  let score = 0;
-
-  const industry = normalize(candidate.industry);
-  const location = normalize(candidate.location);
-  const role = normalize(candidate.role);
-  const signal = normalize(candidate.signal);
-
-  // 1. INDUSTRIA — máximo 25
-  const sectorMatch = brief.hunt_order.target_sectors.some((sector) => {
-    const normalizedSector = normalize(sector);
-
-    return (
-      industry.includes(normalizedSector) ||
-      normalizedSector.includes(industry)
-    );
-  });
-
-  if (candidate.industry && sectorMatch) {
-    score += 25;
-  }
-
-  // 2. UBICACIÓN — máximo 15
-  const geographyMatch = brief.hunt_order.geography.some((geo) => {
-    const normalizedGeo = normalize(geo);
-
-    return (
-      location.includes(normalizedGeo) ||
-      normalizedGeo.includes(location)
-    );
-  });
-
-  if (candidate.location && geographyMatch) {
-    score += 15;
-  }
-
-  // 3. DECISOR IDENTIFICADO — máximo 15
-  if (candidate.decision_maker) {
-    score += 8;
-  }
-
-  const roleMatch = brief.hunt_order.target_roles.some((targetRole) => {
-    const normalizedRole = normalize(targetRole);
-
-    return (
-      role.includes(normalizedRole) ||
-      normalizedRole.includes(role)
-    );
-  });
-
-  if (candidate.role && roleMatch) {
-    score += 7;
-  }
-
-  // 4. SEÑAL DE COMPRA — máximo 25
-  const signalMatch = brief.hunt_order.buying_signals.some((buyingSignal) => {
-    const normalizedSignal = normalize(buyingSignal);
-
-    return (
-      signal.includes(normalizedSignal) ||
-      normalizedSignal.includes(signal)
-    );
-  });
-
-  if (candidate.signal && signalMatch) {
-    score += 15;
-  }
-
-  // Una señal sin fuente no debe valer igual que una señal verificable.
-  if (candidate.signal && candidate.signal_source) {
-    score += 10;
-  }
-
-  // 5. CONTACTABILIDAD — máximo 20
-  if (candidate.whatsapp) {
-    score += 8;
-  } else if (candidate.phone) {
-    score += 5;
-  }
-
-  if (candidate.email) {
-    score += 4;
-  }
-
-  if (candidate.linkedin) {
-    score += 4;
-  }
-
-  if (candidate.website) {
-    score += 4;
-  }
-
-  return Math.min(100, score);
-}
-
-export function scoreToPriority(
-  score: number
-): "A" | "B" | "C" | "Nurture" {
-  if (score >= 80) return "A";
-  if (score >= 65) return "B";
-  if (score >= 50) return "C";
-
-  return "Nurture";
 }
 
 export function qualifyProspect(
   candidate: ProspectCandidate,
   brief: AteneaToHerculesBrief
 ): HerculesProspect {
-  const fitScore = calculateFitScore(candidate, brief);
-  const priority = scoreToPriority(fitScore);
+  // Se puntúa contra la propiedad específica de la orden, no contra un
+  // brief genérico. La lógica vive en lib/scoring.
+  const match = matchScore(candidate, propertyProfileFromBrief(brief));
+  const fitScore = match.score;
+  const priority = match.priority;
 
-  const missingInformation: string[] = [];
+  const missingInformation = [...match.missing];
 
-  if (!candidate.industry) {
-    missingInformation.push("Giro o industria");
-  }
-
-  if (!candidate.location) {
-    missingInformation.push("Ubicación");
-  }
-
-  if (!candidate.decision_maker) {
-    missingInformation.push("Nombre del decisor");
-  }
-
-  if (!candidate.role) {
-    missingInformation.push("Cargo del decisor");
-  }
-
+  // El contacto es un dato operativo: se reporta, pero no puntúa.
   if (!candidate.whatsapp && !candidate.phone) {
     missingInformation.push("Teléfono o WhatsApp");
-  }
-
-  if (!candidate.signal) {
-    missingInformation.push("Señal comercial");
-  }
-
-  if (candidate.signal && !candidate.signal_source) {
-    missingInformation.push("Fuente verificable de la señal");
   }
 
   const reasons: string[] = [];
@@ -224,6 +87,7 @@ export function qualifyProspect(
     signal_source: candidate.signal_source,
 
     fit_score: fitScore,
+    match_breakdown: match.breakdown,
     priority,
 
     status:

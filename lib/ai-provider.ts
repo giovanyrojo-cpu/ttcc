@@ -3,32 +3,31 @@
 // El MVP usa el motor de reglas determinístico de abajo — NO IA de pago.
 
 import { Lead } from "@/types/domain";
+import {
+  matchProspectFromLead,
+  matchScore,
+  type PropertyProfile,
+} from "@/lib/scoring";
 
 export interface AIProvider {
   suggestNextBestAction(lead: Lead): Promise<string>;
-  scoreLead(lead: Lead): Promise<number>;
+  // Match Score del lead contra una propiedad específica.
+  // null si no hay propiedad contra la cual comparar.
+  scoreLead(
+    lead: Lead,
+    property?: PropertyProfile
+  ): Promise<number | null>;
 }
 
 // Implementación por defecto: reglas fijas, sin llamadas externas, costo cero.
 export class RuleBasedProvider implements AIProvider {
-  async scoreLead(lead: Lead): Promise<number> {
-    let score = 0;
+  async scoreLead(
+    lead: Lead,
+    property?: PropertyProfile
+  ): Promise<number | null> {
+    if (!property) return null;
 
-    if (lead.whatsapp) score += 20;
-    if (lead.senal_intencion) score += 25;
-    if (lead.cargo) score += 10;
-    if (lead.propiedad_recomendada) score += 15;
-    if (lead.ubicacion) score += 10;
-    if (lead.fuente) score += 5;
-    if (
-      ["Interesado", "Cita", "Visita", "Propuesta", "Negociación"].includes(
-        lead.estatus_crm
-      )
-    ) {
-      score += 15;
-    }
-
-    return Math.min(100, score);
+    return matchScore(matchProspectFromLead(lead), property).score;
   }
 
   async suggestNextBestAction(lead: Lead): Promise<string> {
@@ -57,11 +56,4 @@ export class RuleBasedProvider implements AIProvider {
         return "Revisar manualmente";
     }
   }
-}
-
-export function scoreToPriority(score: number): "A" | "B" | "C" | "Nurture" {
-  if (score >= 80) return "A";
-  if (score >= 65) return "B";
-  if (score >= 50) return "C";
-  return "Nurture";
 }

@@ -8,7 +8,8 @@ después sin rehacer nada.
 ## Qué incluye este paquete
 - App Next.js completa (App Router): Dashboard, Leads, Pipeline, Comisiones, Propiedades
 - `supabase/schema.sql` — tablas, tipos e índices, con Row Level Security por usuario
-- `lib/ai-provider.ts` — scoring y Next Best Action por reglas, listo para reemplazar por IA real
+- `lib/scoring/` — Match Score, Opportunity Score, Esfuerzo y prioridad (motor de reglas único)
+- `lib/ai-provider.ts` — interfaz `AIProvider` y Next Best Action por reglas, listo para reemplazar por IA real
 - Datos semilla de ejemplo (`lib/seed-data.ts`) — el dashboard funciona aunque Supabase esté vacío o sin configurar
 - Roles preparados en el schema (admin/director/asesor/asistente/solo_lectura) aunque el MVP es de un solo usuario
 
