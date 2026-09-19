@@ -1,3 +1,4 @@
+import { realBuyingSignals } from "./signals";
 import type {
   ProspectSearchProvider,
   RawProspect,
@@ -65,10 +66,21 @@ export const firecrawlProspectProvider: ProspectSearchProvider = {
       for (const result of results) {
         if (!result?.title || !result?.url) continue;
 
+        // El fragmento solo es señal si muestra una señal de compra que NO
+        // sea eco de las palabras de la consulta.
+        const hasRealSignal =
+          realBuyingSignals(
+            result.description,
+            request.buying_signals,
+            query
+          ).length > 0;
+
         prospects.push({
           company_or_person: result.title,
           industry: undefined,
-          location: request.geography.join(", "),
+          // La geografía de la búsqueda no es la ubicación del prospecto:
+          // sin ubicación verificada no se asigna ninguna.
+          location: undefined,
           decision_maker: undefined,
           role: undefined,
           phone: undefined,
@@ -76,8 +88,8 @@ export const firecrawlProspectProvider: ProspectSearchProvider = {
           email: undefined,
           linkedin: undefined,
           website: result.url,
-          signal: result.description,
-          signal_source: result.url,
+          signal: hasRealSignal ? result.description : undefined,
+          signal_source: hasRealSignal ? result.url : undefined,
           source: "firecrawl",
           source_url: result.url,
           discovered_at: new Date().toISOString(),
