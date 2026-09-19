@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getProperties } from "@/lib/data";
 
 export default async function PropertiesPage() {
@@ -8,7 +9,11 @@ export default async function PropertiesPage() {
       <h1 className="text-lg font-bold text-gold">Propiedades</h1>
       <div className="space-y-2">
         {properties.map((p) => (
-          <div key={p.id} className="bg-panel border border-line rounded-xl p-3">
+          <Link
+              key={p.id}
+              href={`/agents/atenea?property=${p.id}`}
+              className="block bg-panel border border-line rounded-xl p-3 hover:border-gold/60 transition-colors"
+            >
             <div className="flex justify-between">
               <div className="font-semibold">{p.titulo}</div>
               <span className="text-[10px] px-2 py-1 rounded-full bg-line text-gray-300">
@@ -21,7 +26,7 @@ export default async function PropertiesPage() {
               {p.kva ? ` · ${p.kva} kVA` : ""}
               {p.anden ? " · Andén" : ""}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

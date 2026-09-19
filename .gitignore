@@ -1,0 +1,22 @@
+# dependencias y build
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# secretos y entorno local
+.env
+.env.*
+!.env.example
+
+# respaldos manuales
+*.bak
+*.bak-*
+*.backup
+*.backup-*
+
+# sistema
+.DS_Store
+.vercel/
+npm-debug.log*
