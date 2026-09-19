@@ -31,6 +31,8 @@ const GENERIC_WORDS = new Set([
   "industrial",
   "industriales",
   "proceso",
+  "operacion",
+  "operaciones",
   "procesos",
   "demanda",
   "relevante",
@@ -97,6 +99,10 @@ const SECTOR_FAMILIES: { name: string; roots: string[] }[] = [
       "fundicion",
       "forja",
     ],
+  },
+  {
+    name: "corte-laser",
+    roots: ["laser", "corte", "plasma", "cnc", "doblez", "troquel", "lamina"],
   },
   {
     name: "plasticos",

@@ -22,7 +22,8 @@ export interface PhoneSource {
 }
 
 // LADA de la zona metropolitana de Querétaro (Querétaro, El Marqués, Corregidora).
-export const QUERETARO_AREA_CODES: readonly string[] = ["442"];
+// La 446 también es de Querétaro (confirmado por Jesús).
+export const QUERETARO_AREA_CODES: readonly string[] = ["442", "446"];
 
 // Copias del mismo directorio: no cuentan como segunda fuente.
 const NOT_INDEPENDENT = /piq\.com\.mx|studocu\.com|scribd\.com/i;

@@ -171,9 +171,14 @@ export function analyzeProperty(property: Property) {
 }
 
 export function createHuntBrief(
-  property: Property
+  property: Property,
+  options: { targetSectors?: string[] } = {}
 ): AteneaToHerculesBrief {
   const analysis = analyzeProperty(property);
+
+  // Si el asesor fija los sectores, reemplazan a los que Atenea deriva del
+  // tipo de propiedad (p. ej. quitar logística en una bodega sin andén).
+  const targetSectors = options.targetSectors ?? analysis.targetSectors;
 
   return {
     version: "1.0",
@@ -198,7 +203,7 @@ export function createHuntBrief(
 
     intelligence: {
       ideal_client: analysis.idealClient,
-      target_sectors: analysis.targetSectors,
+      target_sectors: targetSectors,
       strengths: analysis.strengths,
       missing_information: analysis.missingInformation,
       evidence: analysis.evidence,
@@ -213,7 +218,7 @@ export function createHuntBrief(
         "Querétaro",
       ],
 
-      target_sectors: analysis.targetSectors,
+      target_sectors: targetSectors,
 
       target_roles: [
         "Director General",
